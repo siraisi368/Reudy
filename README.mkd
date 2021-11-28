@@ -8,9 +8,10 @@
 
 ## インストール
 1. sudo apt-get install ruby-dev を実行します
-2. sudo apt-get install g++
-3. gem install discordrbを実行します
-4. 完了
+2. sudo apt-get install g++ を実行します
+3. gem install bundler を実行します
+4. bundler update を実行します
+5. 完了
 
 ## 使い方
 
