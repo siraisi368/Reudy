@@ -1,0 +1,2 @@
+# Reudy
+Discordで動くようにしたReudy
