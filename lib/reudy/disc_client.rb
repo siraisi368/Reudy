@@ -77,10 +77,12 @@ module Gimite
     #実行可能なコマンドを実行
     def command(s)
       puts "コマンド: #{s}"
-      if s =~ /!command disc_change (.+)/
-        result = @bot.find_channel($1)
+      if s =~ /!command disc_move (.+)/
+        result = @bot.channel($1.to_i)
+        puts "#{result.name}"
         unless result == {} || result == []
-          @now_channel = result[0]
+          @now_channel = result
+          @chid = result.id
           return true
         end
       end
@@ -108,7 +110,7 @@ module Gimite
         unless event.message.content == ''
           if event.channel.id != @logid && (event.channel.id == @chid || @user.settings[:nicks].any? {|n| event.message.content.include?(n)} || event.channel.type == 1)
             if event.channel.id != @chid
-              @user.onDiscChange(event.channel.name, event.user.name)
+              @user.onDiscMove(event.channel.id, event.user.name)
             end
             @chid = event.channel.id
             @now_message = event.message

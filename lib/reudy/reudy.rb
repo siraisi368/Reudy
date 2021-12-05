@@ -213,7 +213,7 @@ module Gimite
 
     # sentence中の自分のNickをtargetに置き換える。
     def replaceMyNicks(sentence, target)
-      sentence.gsub(@my_nicks_regexp, target).gsub("@username", target).gsub("@botname", @settings[:real_name]) 
+      sentence.gsub(@my_nicks_regexp, target).gsub("@username", target).gsub("@botname", @settings[:real_name])
     end
 
     # 入力文章から既知単語を拾う。
@@ -624,10 +624,10 @@ module Gimite
 
     #チャンネル移動コマンドのタイミングを学習
     #Discordで呼び出されたとき、同じタイミングで同じチャンネルに行くように学習
-    def onDiscChange(channelname, username)
-      @log.addMsg(username, "!command disc_change #{channelname}")
+    def onDiscMove(channelname, username)
+      @log.addMsg(username, "!command disc_move #{channelname}")
     end
-    
+
     def onForget
       if @log.size >= @forget
       	@log.deleteLead
