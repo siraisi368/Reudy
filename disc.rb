@@ -18,7 +18,7 @@ module Gimite
   db = 'pstore'
   opt.on('--db DB_TYPE') { |v| db = v }
 
-  mecab = nil
+  mecab = true
   opt.on('-m', '--mecab') { mecab = true }
 
   opt.parse!(ARGV)

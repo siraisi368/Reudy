@@ -458,9 +458,6 @@ module Gimite
       return unless output
 
 
-      if output.include?("まんこ") || output.include?("おっぱい") || output.include?("くちゅ")
-        return
-      end
       if output == origInput
         return
       end
