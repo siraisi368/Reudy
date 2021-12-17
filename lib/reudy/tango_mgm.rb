@@ -165,20 +165,6 @@ class WordExtractor
     words |= wordcand2 # 新しい単語を本当に単語として認定する。ただしダブる場合は片方を消す。
     """
 
-    a = line.split(" ")
-
-    a.each do |b|
-      if 8 >= b.length
-        words << b
-      end
-    end
-    a = line.split("　")
-
-    a.each do |b|
-      if 8 >= b.length
-        words << b
-      end
-    end
 
     words.each { |w| @onAddWord.call(w) } if @onAddWord
 

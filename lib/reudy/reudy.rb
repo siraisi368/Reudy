@@ -474,6 +474,8 @@ module Gimite
 
     # 自由発話として発言する。
     def speak(input, output)
+      puts "#{@newInputWords}"
+      puts "#{@inputWords}"
       @lastSpeachOutput = output
       studyMsg("!", output) # 自分の発言を記憶する。
       @client.outputInfo("「#{input}」に反応した。") if @settings[:teacher_mode]
@@ -600,10 +602,8 @@ module Gimite
       else # 定型コマンドではない。
         @lastSpeachInput = input
         studyMsg(from_nick, input)
-        onAddWord(from_nick)
         pickUpInputWords(input)
         fromNickData = @wordSet.words.select { |word| word.str == from_nick }
-        @inputWords.push([fromNickData[0], 1])
         prob = @attention.onOtherSpeak(from_nick, input, called)
         dprint("発言率", prob, @attention.to_s) # 発言率を求める。
 
