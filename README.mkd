@@ -10,7 +10,8 @@
 1. sudo apt-get install ruby-dev を実行します
 2. sudo apt-get install g++ を実行します
 3. gem install discordrb を実行します
-4. 完了
+4. gem install suika を実行します
+5. 完了
 
 ## 使い方
 
