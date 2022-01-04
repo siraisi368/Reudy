@@ -24,6 +24,8 @@ module Gimite
 
     def initialize(dir, fixedSettings = {}, db = "pstore", mecab = nil)
       @attention = nil
+      
+      @brainSpaceMark = "=====brainSpace>>"
 
       # 設定を読み込む。
       @db = db # 使用するDBの名前
@@ -61,6 +63,7 @@ module Gimite
       @client = nil
       @lastSpeachInput = nil
       @lastSpeachOutput = nil
+      @fromNick
       @inputWords = []
       @newInputWords = []
       @recentUnusedCt = 100 # 最近n個の発言は対象としない
@@ -68,7 +71,7 @@ module Gimite
       @recentBaseMsgNs = Array.new(@repeatProofCt) # 最近使ったベース発言番号
       @thoughtFile = open(dir + "/thought.txt", "a") # 思考過程を記録するファイル
       @thoughtFile.sync = true
-      @forget = 100000000
+      @forget = 1000000
 
       setWordAdoptBorder
     end
@@ -221,13 +224,16 @@ module Gimite
       input = replaceMyNicks(input, " ")
       words = []
       @wordSearcher.searchWords(input).each do |w|
-        words.push([w, 1]) #[単語, 注目度]
+        words.push([w, true]) #[単語, 共通単語発言対象か]
+      end
+      @wordSearcher.searchWords(@fromNick).each do |w|
+        words.push([w, false]) #[単語, 共通単語発言対象か]
       end
       @newInputWords = words.select { |w| canAdoptWord(w[0]) } # 入力に含まれる単語を列挙
       # 入力に単語が無い場合は、時々入力語をランダムに変更
       if @newInputWords.empty? && rand(50).zero?
         word = @wordSet.words.sample
-        @newInputWords.push([word, 1]) if canAdoptWord(word)
+        @newInputWords.push([word, true]) if canAdoptWord(word)
       end
       # 連想される単語を追加
       assoc_words = @newInputWords.map { |w| @associator.associate(w[0].str) }
@@ -235,23 +241,14 @@ module Gimite
       assoc_words.map! { |s| Word.new(s) }
       words = []
       assoc_words.each do |w|
-        words.push([w, 1]) #[単語, 注目度]
+        words.push([w, true]) #[単語, 注目度]
       end
       @newInputWords.concat(words)
       # 入力語の更新
       return if @newInputWords.empty?
+      
 
-      @newInputWords_ = []
-      if @newInputWords != [] || @inputWords != []
-        @newInputWords.each do |niw|
-          @inputWords.each do |iw|
-            if niw[0] == iw[0]
-              niw[1] += 1
-              @newInputWords_.push(niw)
-            end
-          end
-        end
-      end
+
 
 
       if rand(5).nonzero?
@@ -293,6 +290,12 @@ module Gimite
     # 共通の単語を持つ発言と、その返事の発言番号を返す。
     # 適切なものが無ければ、[nil, nil]。
     def getBaseMsgUsingKeyword(inputWords)
+      words = []
+      inputWords.each do |w|
+        if w[1] == true
+          words.push(words)
+        end
+      end
       maxMid = maxResMid = nil
       maxProb = 0
       i = 0
@@ -345,14 +348,8 @@ module Gimite
     # toForceがfalseの場合、短すぎる文章になってしまった場合はnilを返す。
     def replaceWords(base, new_words, toForce)
       words = []
-      i = 0
       new_words.each do |w|
-        if i < w[1]
-          i = w[1]
-        end
-      end
-      new_words.each do |w|
-        if w[1] > i
+        if w[1] == true
           words.push(w[0])
         end
       end
@@ -469,6 +466,8 @@ module Gimite
         output = output.gsub("'", "")
       end
       output = replaceMyNicks(output, fromNick) # 発言中の自分のNickを相手のNickに変換
+      output = output.split(@brainSpaceMark)
+      output = output[0]
       speak(origInput, output) # 実際に発言。
     end
 
@@ -594,6 +593,8 @@ module Gimite
     # 他人が発言した。
     def onOtherSpeak(from_nick, input, should_ignore = false)
       return if input == nil || from_nick == nil
+      onAddWord(from_nick)
+      @newInputWords << from_nick
       input = input.force_encoding(Encoding::UTF_8)
       called = @myNicks.any? { |n| input.include?(n) }
       output = called ? processCommand(input) : nil # 発言。
@@ -601,8 +602,8 @@ module Gimite
         @client.speak(output) if output != :exit && !output.empty?
       else # 定型コマンドではない。
         @lastSpeachInput = input
-        studyMsg(from_nick, input)
         pickUpInputWords(input)
+        studyMsg(from_nick, input)
         fromNickData = @wordSet.words.select { |word| word.str == from_nick }
         prob = @attention.onOtherSpeak(from_nick, input, called)
         dprint("発言率", prob, @attention.to_s) # 発言率を求める。
@@ -615,6 +616,35 @@ module Gimite
           onAddWord($1)
         end
         speakFreely(from_nick, input, prob > 1.0) if (!should_ignore && rand < prob) || prob > 1.0 # 自由発話。
+      end
+      onForget
+    end
+
+    # 他人が発言した。
+    def onOtherSpeakDontReply(from_nick, input)
+      return if input == nil || from_nick == nil
+      onAddWord(from_nick)
+      @newInputWords << from_nick
+      input = input.force_encoding(Encoding::UTF_8)
+      called = @myNicks.any? { |n| input.include?(n) }
+      output = called ? processCommand(input) : nil # 発言。
+      if output
+        @client.speak(output) if output != :exit && !output.empty?
+      else # 定型コマンドではない。
+        @lastSpeachInput = input
+        pickUpInputWords(input)
+        studyMsg(from_nick, input)
+        fromNickData = @wordSet.words.select { |word| word.str == from_nick }
+        prob = @attention.onOtherSpeak(from_nick, input, called)
+        dprint("発言率", prob, @attention.to_s) # 発言率を求める。
+
+        if input =~ /> (.+) => (.+)/
+          @log.addMsg("!input", $1)
+          @log.addMsg("!teacher", $2)
+          @client&.outputInfo("反応「#{$1}→→#{$2}」を学習した。")
+        elsif input =~ /> (.+)/
+          onAddWord($1)
+        end
       end
       onForget
     end
