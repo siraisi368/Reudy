@@ -27,7 +27,7 @@ module Gimite
   begin
     # IRC用ロイディを作成
     client = DiscordBot.new(Reudy.new(directory, {}, db, mecab))
-  rescue Interrupt
-    nil # 割り込み発生。
+  rescue => e
+    p e #=> RuntimeError
   end
 end
