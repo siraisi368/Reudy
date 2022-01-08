@@ -11,4 +11,6 @@ install.shを実行するとインストールが可能になります。
 
 ## 使い方
 
-調整中
+public/setting.ymlをいじってください。
+:disc_token: はbotのトークンです。
+:nicks: にはbotの呼び名を指定できます。複数指定できます。
