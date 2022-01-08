@@ -14,3 +14,7 @@ install.shを実行するとインストールが可能になります。
 public/setting.ymlをいじってください。
 :disc_token: はbotのトークンです。
 :nicks: にはbotの呼び名を指定できます。複数指定できます。
+
+コマンドで
+ruby disc.rb
+でbotが起動します。
