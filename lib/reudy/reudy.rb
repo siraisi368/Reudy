@@ -71,7 +71,7 @@ module Gimite
       @recentBaseMsgNs = Array.new(@repeatProofCt) # 最近使ったベース発言番号
       @thoughtFile = open(dir + "/thought.txt", "a") # 思考過程を記録するファイル
       @thoughtFile.sync = true
-      @forget = 1000000
+      @forget = 100000000
 
       setWordAdoptBorder
     end
