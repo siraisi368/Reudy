@@ -620,35 +620,6 @@ module Gimite
       onForget
     end
 
-    # 他人が発言した。
-    def onOtherSpeakDontReply(from_nick, input)
-      return if input == nil || from_nick == nil
-      onAddWord(from_nick)
-      @newInputWords << from_nick
-      input = input.force_encoding(Encoding::UTF_8)
-      called = @myNicks.any? { |n| input.include?(n) }
-      output = called ? processCommand(input) : nil # 発言。
-      if output
-        @client.speak(output) if output != :exit && !output.empty?
-      else # 定型コマンドではない。
-        @lastSpeachInput = input
-        pickUpInputWords(input)
-        studyMsg(from_nick, input)
-        fromNickData = @wordSet.words.select { |word| word.str == from_nick }
-        prob = @attention.onOtherSpeak(from_nick, input, called)
-        dprint("発言率", prob, @attention.to_s) # 発言率を求める。
-
-        if input =~ /> (.+) => (.+)/
-          @log.addMsg("!input", $1)
-          @log.addMsg("!teacher", $2)
-          @client&.outputInfo("反応「#{$1}→→#{$2}」を学習した。")
-        elsif input =~ /> (.+)/
-          onAddWord($1)
-        end
-      end
-      onForget
-    end
-
     #チャンネル移動コマンドのタイミングを学習
     #Discordで呼び出されたとき、同じタイミングで同じチャンネルに行くように学習
     def onDiscMove(channelid, channelname, username)
