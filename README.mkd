@@ -18,3 +18,6 @@ public/setting.ymlをいじってください。
 コマンドで
 ruby disc.rb
 でbotが起動します。
+
+## 備考
+ruesei-koseki( https://github.com/ruesei-koseki )氏のフォークリポジトリです
